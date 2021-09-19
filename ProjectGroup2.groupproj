@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{D76B0ABE-CC8E-4FFE-995D-DB1F59FF7E31}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="MiniWebServer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tester\GetTester.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="MiniWebServer">
+        <MSBuild Projects="MiniWebServer.dproj"/>
+    </Target>
+    <Target Name="MiniWebServer:Clean">
+        <MSBuild Projects="MiniWebServer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MiniWebServer:Make">
+        <MSBuild Projects="MiniWebServer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GetTester">
+        <MSBuild Projects="Tester\GetTester.dproj"/>
+    </Target>
+    <Target Name="GetTester:Clean">
+        <MSBuild Projects="Tester\GetTester.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GetTester:Make">
+        <MSBuild Projects="Tester\GetTester.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="MiniWebServer;GetTester"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="MiniWebServer:Clean;GetTester:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="MiniWebServer:Make;GetTester:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
