@@ -10,8 +10,11 @@ uses
   System.Threading,
   System.Net.HttpClient;
 
+var i: integer;
+
 begin
   try
+    i := 0;
     var Count := 0;
     var CountMax := 100000;
     var Tasks: TArray<ITask>;
@@ -21,9 +24,11 @@ begin
         procedure
         begin
           try
+
+            Inc(i);
             with THTTPClient.Create do
             try
-              Writeln(Get('http://root.hemulgm.ru').StatusCode);
+              Writeln(i, ' ', Get('http://root.hemulgm.ru').StatusCode);
             finally
               Free;
             end;
