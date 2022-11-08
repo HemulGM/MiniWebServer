@@ -14,9 +14,14 @@ begin
   repeat
     try
       try
-        Server.Route('/test',
+        Server.Route([hcGET, hcHEAD], '/test',
           procedure(Request: TIdHTTPRequestInfo; Response: TIdHTTPResponseInfo)
           begin
+            if Request.CommandType = hcHEAD then
+            begin
+              Response.ContentLength := 100;
+              Exit;
+            end;
             Writeln(Request.QueryParams);
             Writeln(Request.Range);
             Response.ContentText := '{ "value": 13 }';
