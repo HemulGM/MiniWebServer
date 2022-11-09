@@ -1,54 +1,42 @@
 ﻿program MiniWebServer_Attrib;
 
 uses
-  System.Classes,
-  System.SysUtils,
-  IdCustomHTTPServer,
-  HTTP.Server in 'HTTP.Server.pas';
+  HTTP.Server in 'HTTP.Server.pas',
+  WMS.OWM in 'Sample\WMS.OWM.pas';
 
 type
   TServer = class(THTTPServer)
-  public
-    [RouteMethod('/test', [hcGET, hcHEAD])]
-    procedure Test(Request: TIdHTTPRequestInfo; Response: TIdHTTPResponseInfo);
-    [RouteMethod('/check', [hcGET])]
-    procedure Check(Request: TIdHTTPRequestInfo; Response: TIdHTTPResponseInfo);
+    [RouteMethod('/test', [GET, HEAD])]
+    procedure Test(Request: TRequest; Response: TResponse);
+    [RouteMethod('/check', [GET])]
+    procedure Check(Request: TRequest; Response: TResponse);
   end;
 
 { TServer }
 
-procedure TServer.Check(Request: TIdHTTPRequestInfo; Response: TIdHTTPResponseInfo);
+procedure TServer.Check;
 begin
-  Response.ContentText := '{ "value": "test_text" }';
-  Response.ContentType := 'application/json';
-  Response.ResponseNo := 401;
+  //send json
+  Response.Json('{ "value": "test_text" }', 401);
+  //send file
+  Response.AsFile('C:\file.ext');
 end;
 
-procedure TServer.Test(Request: TIdHTTPRequestInfo; Response: TIdHTTPResponseInfo);
+procedure TServer.Test;
 begin
-  if Request.CommandType = hcHEAD then
-  begin
-    Response.ContentLength := 100;
-    Exit;
-  end;
-  Writeln(Request.QueryParams);
-  Writeln(Request.Range);
-  Response.ContentText := '{ "value": 13 }';
-  Response.ContentType := 'application/json';
-  Response.ResponseNo := 200;
+  Response.Json('{ "value": 13 }');
 end;
 
 begin
   var Server := TServer.Create;
   try
+    Server.AutoFileServer := True;
     Server.Route('/run',
-      procedure(Request: TIdHTTPRequestInfo; Response: TIdHTTPResponseInfo)
+      procedure(Request: TRequest; Response: TResponse)
       begin
-        Response.ContentText := '{ "text": "done" }';
-        Response.ContentType := 'application/json';
-        Response.ResponseNo := 200;
+        Response.Json('{ "text": "done" }', 200);
       end);
-
+    Server.Route('/weather', GetWeather);
     Server.Run([80, 8080, 9090]);
   finally
     Server.Free;

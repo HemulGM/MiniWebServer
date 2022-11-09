@@ -136,7 +136,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="HTTP.Server.pas"/>
-        <DCCReference Include="HTTP.HTMLBuild.pas"/>
+        <DCCReference Include="Sample\WMS.OWM.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -175,6 +175,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Win32\Debug\MiniWebServer.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Debug\MiniWebServer.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>MiniWebServer.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

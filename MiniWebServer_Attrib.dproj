@@ -146,6 +146,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="HTTP.Server.pas"/>
+        <DCCReference Include="Sample\WMS.OWM.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
