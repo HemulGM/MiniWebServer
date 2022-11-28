@@ -33,6 +33,8 @@ type
 
   TOnRequest = reference to procedure(Request: TRequest; Response: TResponse);
 
+  TOnResponsePlainText = reference to procedure(var Response: string; var Code: Word);
+
   TOnRequestProc = procedure(Request: TRequest; Response: TResponse) of object;
 
   THTTPCommand = (HEAD, GET, POST, DELETE, PUT, TRACE, OPTION);
@@ -47,12 +49,31 @@ type
 
   TRoute = class
     URI: string;
-    Proc: TOnRequest;
     Method: THTTPCommandTypes;
     function CheckURI(Request: TRequest): Boolean;
     constructor Create; overload;
+    constructor Create(const URI: string); overload;
+    constructor Create(Method: THTTPCommandTypes; const URI: string); overload;
+    procedure Execute(Request: TRequest; Response: TResponse); virtual; abstract;
+  public
+  end;
+
+  TRouteFull = class(TRoute)
+  protected
+    Proc: TOnRequest;
+  public
     constructor Create(const URI: string; Proc: TOnRequest); overload;
     constructor Create(Method: THTTPCommandTypes; const URI: string; Proc: TOnRequest); overload;
+    procedure Execute(Request: TRequest; Response: TResponse); override;
+  end;
+
+  TRoutePlaiText = class(TRoute)
+  protected
+    Proc: TOnResponsePlainText;
+  public
+    constructor Create(const URI: string; Proc: TOnResponsePlainText); overload;
+    constructor Create(Method: THTTPCommandTypes; const URI: string; Proc: TOnResponsePlainText); overload;
+    procedure Execute(Request: TRequest; Response: TResponse); override;
   end;
 
   RouteMethod = class(TCustomAttribute)
@@ -86,6 +107,8 @@ type
     procedure Run(const Ports: TArray<Word> = []); overload;
     procedure Route(const URI: string; Proc: TOnRequest); overload;
     procedure Route(Method: THTTPCommands; const URI: string; Proc: TOnRequest); overload;
+    procedure Route(Method: THTTPCommands; const URI: string; Proc: TOnResponsePlainText); overload;
+    procedure Route(const URI: string; Proc: TOnResponsePlainText); overload;
     procedure Route(Method: THTTPCommands; const URI: string; Proc: TRttiMethod); overload;
     property ContentPath: string read FContentPath write FContentPath;
     property AutoFileServer: Boolean read FAutoFileServer write SetAutoFileServer;
@@ -163,8 +186,7 @@ begin
   for var Route in FRoutes do
     if Route.CheckURI(Request) then
     begin
-      if Assigned(Route.Proc) then
-        Route.Proc(Request, Response);
+      Route.Execute(Request, Response);
       Exit(True);
     end;
   Result := False;
@@ -175,12 +197,22 @@ begin
   var LMethod: TMethod;
   LMethod.Code := Proc.CodeAddress;
   LMethod.Data := Self;
-  FRoutes.Add(TRoute.Create(Method.ToHTTPCommandTypes, URI, TOnRequestProc(LMethod)));
+  FRoutes.Add(TRouteFull.Create(Method.ToHTTPCommandTypes, URI, TOnRequestProc(LMethod)));
+end;
+
+procedure THTTPServer.Route(const URI: string; Proc: TOnResponsePlainText);
+begin
+  FRoutes.Add(TRoutePlaiText.Create([], URI, Proc));
+end;
+
+procedure THTTPServer.Route(Method: THTTPCommands; const URI: string; Proc: TOnResponsePlainText);
+begin
+  FRoutes.Add(TRoutePlaiText.Create(Method.ToHTTPCommandTypes, URI, Proc));
 end;
 
 procedure THTTPServer.Route(Method: THTTPCommands; const URI: string; Proc: TOnRequest);
 begin
-  FRoutes.Add(TRoute.Create(Method.ToHTTPCommandTypes, URI, Proc));
+  FRoutes.Add(TRouteFull.Create(Method.ToHTTPCommandTypes, URI, Proc));
 end;
 
 procedure THTTPServer.Route(const URI: string; Proc: TOnRequest);
@@ -222,34 +254,6 @@ begin
   FAutoFileServer := Value;
 end;
 
-{ TRoute }
-
-function TRoute.CheckURI(Request: TRequest): Boolean;
-begin
-  Result := ((Method = []) or (Request.CommandType in Method)) and (Request.URI = URI);
-end;
-
-constructor TRoute.Create(const URI: string; Proc: TOnRequest);
-begin
-  Create([], URI, Proc);
-end;
-
-constructor TRoute.Create(Method: THTTPCommandTypes; const URI: string; Proc: TOnRequest);
-begin
-  inherited Create;
-  Self.Method := Method;
-  Self.URI := URI;
-  Self.Proc := Proc;
-end;
-
-constructor TRoute.Create;
-begin
-  inherited;
-  Method := [];
-  URI := '';
-  Proc := nil;
-end;
-
 { RouteMethod }
 
 constructor RouteMethod.Create(const URI: string; Method: THTTPCommands);
@@ -280,7 +284,7 @@ end;
 procedure TResponseHelper.AsFile(const FileName: string; Code: Integer);
 begin
   ContentType := HTTPServer.MIMETable.GetFileMIMEType(FileName);
-  ContentLength := TFile.GetSize(FileName);
+  //ContentLength := TFile.GetSize(FileName);
   ContentStream := TFileStream.Create(FileName, fmShareDenyWrite);
   ResponseNo := Code;
 end;
@@ -345,6 +349,76 @@ begin
     Include(Result, hcTRACE);
   if OPTION in Self then
     Include(Result, hcOPTION);
+end;
+
+{ TRoute }
+
+function TRoute.CheckURI(Request: TRequest): Boolean;
+begin
+  Result := ((Method = []) or (Request.CommandType in Method)) and (Request.URI = URI);
+end;
+
+constructor TRoute.Create(const URI: string);
+begin
+  Create([], URI);
+end;
+
+constructor TRoute.Create(Method: THTTPCommandTypes; const URI: string);
+begin
+  inherited Create;
+  Self.Method := Method;
+  Self.URI := URI;
+end;
+
+constructor TRoute.Create;
+begin
+  inherited;
+  Method := [];
+  URI := '';
+end;
+
+{ TRouteFull }
+
+constructor TRouteFull.Create(const URI: string; Proc: TOnRequest);
+begin
+  inherited Create(URI);
+  Self.Proc := Proc;
+end;
+
+constructor TRouteFull.Create(Method: THTTPCommandTypes; const URI: string; Proc: TOnRequest);
+begin
+  inherited Create(Method, URI);
+  Self.Proc := Proc;
+end;
+
+procedure TRouteFull.Execute(Request: TRequest; Response: TResponse);
+begin
+  Proc(Request, Response);
+end;
+
+{ TRoutePlaiText }
+
+constructor TRoutePlaiText.Create(const URI: string; Proc: TOnResponsePlainText);
+begin
+  inherited Create(URI);
+  Self.Proc := Proc;
+end;
+
+constructor TRoutePlaiText.Create(Method: THTTPCommandTypes; const URI: string; Proc: TOnResponsePlainText);
+begin
+  inherited Create(Method, URI);
+  Self.Proc := Proc;
+end;
+
+procedure TRoutePlaiText.Execute(Request: TRequest; Response: TResponse);
+var
+  ResponseText: string;
+  ResponseCode: Word;
+begin
+  ResponseCode := 200;
+  Proc(ResponseText, ResponseCode);
+  Response.ContentText := ResponseText;
+  Response.ResponseNo := ResponseCode;
 end;
 
 end.
