@@ -22,6 +22,7 @@ begin
     Server.Route('/fibonacci',
       procedure(var Response: string; var Code: Word)
       begin
+        Sleep(10000);
         var a, b, c: Cardinal;
         a := 0;
         b := 1;
