@@ -1,6 +1,8 @@
 ﻿program MiniWebServer_Attrib;
 
 uses
+  System.SysUtils,
+  System.Json,
   HTTP.Server in 'HTTP.Server.pas',
   WMS.OWM in 'Sample\WMS.OWM.pas';
 
@@ -24,7 +26,12 @@ end;
 [RouteMethod('/test', [GET, HEAD])]
 procedure TServer.Test;
 begin
-  Response.Json('{ "value": 13 }');
+  var Json := TJSONObject.Create;
+
+  Json.AddPair('id', TJSONNumber.Create(Request.Params.Values['id'].ToInteger));
+  Json.AddPair('text', 'Text');
+  Json.AddPair('array', TJSONArray.Create('text1', 'text2'));
+  Response.Json(Json);
 end;
 
 begin
@@ -37,7 +44,7 @@ begin
         Response.Json('{ "text": "done" }', 200);
       end);
     Server.Route('/weather', GetWeather);
-    Server.Run([80, 8080, 9090]);
+    Server.Run([777]);
   finally
     Server.Free;
   end;

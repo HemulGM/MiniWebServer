@@ -12,6 +12,9 @@
         <Projects Include="MiniWebServer_Attrib.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Sample\StressTest\StressTest.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -47,14 +50,23 @@
     <Target Name="MiniWebServer_Attrib:Make">
         <MSBuild Projects="MiniWebServer_Attrib.dproj" Targets="Make"/>
     </Target>
+    <Target Name="StressTest">
+        <MSBuild Projects="Sample\StressTest\StressTest.dproj"/>
+    </Target>
+    <Target Name="StressTest:Clean">
+        <MSBuild Projects="Sample\StressTest\StressTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="StressTest:Make">
+        <MSBuild Projects="Sample\StressTest\StressTest.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="MiniWebServer;GetTester;MiniWebServer_Attrib"/>
+        <CallTarget Targets="MiniWebServer;GetTester;MiniWebServer_Attrib;StressTest"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="MiniWebServer:Clean;GetTester:Clean;MiniWebServer_Attrib:Clean"/>
+        <CallTarget Targets="MiniWebServer:Clean;GetTester:Clean;MiniWebServer_Attrib:Clean;StressTest:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="MiniWebServer:Make;GetTester:Make;MiniWebServer_Attrib:Make"/>
+        <CallTarget Targets="MiniWebServer:Make;GetTester:Make;MiniWebServer_Attrib:Make;StressTest:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
