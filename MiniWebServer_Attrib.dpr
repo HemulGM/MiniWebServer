@@ -6,14 +6,13 @@ uses
 
 type
   TServer = class(THTTPServer)
-    [RouteMethod('/test', [GET, HEAD])]
     procedure Test(Request: TRequest; Response: TResponse);
-    [RouteMethod('/check', [GET])]
     procedure Check(Request: TRequest; Response: TResponse);
   end;
 
 { TServer }
 
+[RouteMethod('/check', [GET])]
 procedure TServer.Check;
 begin
   //send json
@@ -22,6 +21,7 @@ begin
   Response.AsFile('C:\file.ext');
 end;
 
+[RouteMethod('/test', [GET, HEAD])]
 procedure TServer.Test;
 begin
   Response.Json('{ "value": 13 }');
