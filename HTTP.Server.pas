@@ -87,6 +87,10 @@ type
   TRoutes = class(TObjectList<TRoute>)
   end;
 
+  TOnServerWork = reference to procedure(var Stop: Boolean);
+
+  TOnServerErrorBind = reference to procedure;
+
   THTTPServer = class(TComponent)
   private
     FRoutes: TRoutes;
@@ -105,6 +109,7 @@ type
     destructor Destroy; override;
     procedure AddMimeType(const Ext, MIMEType: string);
     procedure Run(const Ports: TArray<Word> = []); overload;
+    procedure RunSync(const Port: Word);
     procedure Route(const URI: string; Proc: TOnRequest); overload;
     procedure Route(Method: THTTPCommands; const URI: string; Proc: TOnRequest); overload;
     procedure Route(Method: THTTPCommands; const URI: string; Proc: TOnResponsePlainText); overload;
@@ -162,7 +167,7 @@ end;
 
 procedure THTTPServer.DoCommand(AContext: TIdContext; Request: TRequest; Response: TResponse);
 begin
-  Writeln(Request.RemoteIP, ' ', Request.Command, ' ', Request.URI, ' ', Request.QueryParams, ' ', Request.Range);
+  //Writeln(Request.RemoteIP, ' ', Request.Command, ' ', Request.URI, ' ', Request.QueryParams, ' ', Request.Range);
   if FAutoFileServer and (Request.CommandType in [hcGET, hcHEAD]) then
   begin
     var Path := Request.URI;
@@ -218,6 +223,12 @@ end;
 procedure THTTPServer.Route(const URI: string; Proc: TOnRequest);
 begin
   Route([], URI, Proc);
+end;
+
+procedure THTTPServer.RunSync(const Port: Word);
+begin
+  Instance.Bindings.Add.Port := Port;
+  Instance.Active := True;
 end;
 
 procedure THTTPServer.Run(const Ports: TArray<Word>);
